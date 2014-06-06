@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<!-- Use the Source, Luke -->
+
+<head>
+    <title>CodeFlower Source code visualization</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <link type="text/css" rel="stylesheet" href="stylesheets/bootstrap.min.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="stylesheets/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Rosario:400,700' rel='stylesheet' type='text/css'>
+    <link type="text/css" rel="stylesheet" href="stylesheets/style.css" />
+    <style type="text/css">
+    circle.node {
+        cursor: pointer;
+        stroke: #000;
+        stroke-width: .5px;
+    }
+    circle.node.directory {
+        stroke: #9ecae1;
+        stroke-width: 2px;
+    }
+    circle.node.collapsed {
+        stroke: #555;
+    }
+    .nodetext {
+        fill: #252929;
+        font-weight: bold;
+        text-shadow: 0 0 0.2em white;
+    }
+    line.link {
+        fill: none;
+        stroke: #9ecae1;
+        stroke-width: 1.5px;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <div class="container">
+            <form class="form-inline hidden">
+                <fieldset>
+                    <select id="project">
+                        <option value="data/uptime.json">fzaninotto / uptime</option>
+                    </select>
+                </fieldset>
+            </form>
+            <div id="visualization"></div>
+
+
+    <script type="text/javascript" src="javascripts/d3/d3.js"></script>
+    <script type="text/javascript" src="javascripts/d3/d3.geom.js"></script>
+    <script type="text/javascript" src="javascripts/d3/d3.layout.js"></script>
+    <script type="text/javascript" src="javascripts/CodeFlower.js"></script>
+    <script type="text/javascript" src="javascripts/dataConverter.js"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+      var currentCodeFlower;
+      var createCodeFlower = function(json) {
+        // update the jsonData textarea
+        // remove previous flower to save memory
+        if (currentCodeFlower) currentCodeFlower.cleanup();
+        // adapt layout size to the total number of elements
+        var total = countElements(json);
+        w = parseInt(1000);
+        h = parseInt(600);
+        // create a new CodeFlower
+        currentCodeFlower = new CodeFlower("#visualization", w, h).update(json);
+      };
+      var socket = io.connect();
+      var json = {name: "root", children:[]};
+        socket.on('filerefresh', function (data) {
+            if(!data){
+                json = {name: "root", children:[]};
+                return;
+            }
+             data.obj.children;
+           setChild(data.obj, data.path);
+           // json.children.push(data.obj);
+            currentCodeFlower = new CodeFlower("#visualization", w, h).update(json);
+        });
+        function setChild(child, path){
+            var temp = [json];
+            path = path.split("/");
+            path.shift();
+            for(var i=0; i<path.length; i++){
+                temp = getName(path[i], temp);
+            }
+            function getName(path, temp){
+                for(var i=0; i < temp.length; i++){
+                     if(temp[i].name == path){
+                        if( !temp[i].children){
+                            temp[i].children = [];
+                        }
+                         return temp[i].children;
+                     }
+               }
+               temp.push({
+                    name : path,
+                    children: []
+               });
+               return temp;
+            }
+           temp &&  temp.push(child);
+        }
+
+      d3.json('data.json', createCodeFlower);
+
+    </script>
+  </body>
+</html>
+

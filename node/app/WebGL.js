@@ -13,7 +13,7 @@ app.WebGL = function (base, me, Base){this.setMe=function(_me){me=_me;};
             console.log("socket connected");
         });
         var fileData;
-        require('fs').readFile( web.sources + "/data.json", function( err, data ) {
+        require('fs').readFile( web.sources + "/data/wordpress.json", function( err, data ) {
             fileData = JSON.parse(data.toString('utf-8'));
         });
         setTimeout(function(){
@@ -32,11 +32,12 @@ app.WebGL = function (base, me, Base){this.setMe=function(_me){me=_me;};
                 informClient(null)
             }
             informClient(fileData.pop());
-        }, 500)
+        }, 1000)
     }
     function informClient(data){
         var sockets = io.sockets.sockets;
         sockets.forEach(function(socket){
+            delete data.obj.children;
             socket.emit("filerefresh", data);
         });
     }
